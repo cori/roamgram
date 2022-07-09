@@ -51,6 +51,7 @@ const main = async ({ token, adminId, roam: { graph, email, password } }) => {
     if (validator(message)) {
       const dailyNoteId = roam.dailyNoteUid();
       const dailyNoteTitle = roam.dailyNoteTitle();
+	const utcDateTime = new Date().toISOString();  
 
       roam
         .runQuery(
@@ -66,7 +67,7 @@ const main = async ({ token, adminId, roam: { graph, email, password } }) => {
         .then((order) => {
           roam
             .appendBlock(
-              message.text.replace(/\/add /, ""),
+              message.text.replace(/\/add /, `${utcDateTime}: `),
               order ?? 0,
               dailyNoteId
             )
