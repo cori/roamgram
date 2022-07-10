@@ -51,13 +51,13 @@ const main = async ({ token, adminId, roam: { graph, email, password } }) => {
     if (validator(message)) {
       const dailyNoteId = roam.dailyNoteUid();
       const dailyNoteTitle = roam.dailyNoteTitle();
-      const timeStr = new Date().toLocaleTimeString( [], { timeZone: 'America/Chicago', hour12: false, minute: '2-digit', hour: '2-digit' } );  
-
+      const timeStr = new Date().toLocaleTimeString( [], { timeZone: 'America/Chicago', hour12: false, minute: '2-digit', hour: '2-digit' } );
       roam
         .runQuery(
           `[ :find (pull ?e [*]) :where [?e :node/title "${dailyNoteTitle}"]]`
         )
         .then((result) => {
+	  //	find the number of children of the dailyNote and stick this on the end 
           try {
             return result[0][0].children.length;
           } catch {
