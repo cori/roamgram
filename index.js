@@ -1,6 +1,10 @@
 const TelegramBotApi = require("node-telegram-bot-api");
 const RoamResearchPrivateApi = require("roam-research-private-api");
 
+//  TODO: look for #ij node, if missing create it; aadd these messages therein
+//  TODO: in roam-research-private-api, update daily note things with timezone
+//  TODONE: fix `/add` to something better. maybe just try `&`?
+
 class RoamApi extends RoamResearchPrivateApi {
   async appendBlock(text, order = 0, uid) {
     const result = await this.page.evaluate(
@@ -8,18 +12,23 @@ class RoamApi extends RoamResearchPrivateApi {
         if (!window.roamAlphaAPI) {
           return Promise.reject("No Roam API detected");
         }
-        const result = window.roamAlphaAPI.createBlock({
+        window.roamAlphaAPI.createBlock({
           location: { "parent-uid": uid, order },
           block: { string: text },
-        });
-        return Promise.resolve(result);
+        }).then((result) => {
+          console.log(result);
+          return Promise.resolve(result);
+        }).catch((err) => {
+          console.error(err);
+          return Promise.reject(result);
+        })
       },
       text,
       order,
       uid
     );
     // Let's give time to sync.
-    await this.page.waitForTimeout(1000);
+    // await this.page.waitForTimeout(1000); 
     return result;
   }
 }
@@ -46,7 +55,7 @@ const main = async ({ token, adminId, roam: { graph, email, password } }) => {
     );
   });
 
-  bot.onText(/\/add (.+)/, (message) => {
+  bot.onText(/& (.+)/, (message) => {
     const chatId = message.chat.id;
     if (validator(message)) {
       const dailyNoteId = roam.dailyNoteUid();
@@ -57,7 +66,7 @@ const main = async ({ token, adminId, roam: { graph, email, password } }) => {
           `[ :find (pull ?e [*]) :where [?e :node/title "${dailyNoteTitle}"]]`
         )
         .then((result) => {
-	  //	find the number of children of the dailyNote and stick this on the end 
+      	  //	find the number of children of the dailyNote and stick this on the end 
           try {
             return result[0][0].children.length;
           } catch {
@@ -67,12 +76,12 @@ const main = async ({ token, adminId, roam: { graph, email, password } }) => {
         .then((order) => {
           roam
             .appendBlock(
-              message.text.replace(/\/add /, `${timeStr}:: `),
+              message.text.replace(/& /, `${timeStr}:: `),
               order ?? 0,
               dailyNoteId
             )
             .then((result) => {
-              if (result) {
+              if (result) {  //  https://roamresearch.com/#/app/developer-documentation/page/YxUqV1lKF these are always some version of nil
                 bot.sendMessage(chatId, `Added text to Roam Daily Notes`);
               } else {
                 bot.sendMessage(
