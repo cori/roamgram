@@ -51,7 +51,7 @@ const main = async ({ token, adminId, roam: { graph, email, password } }) => {
     if (validator(message)) {
       const dailyNoteId = roam.dailyNoteUid();
       const dailyNoteTitle = roam.dailyNoteTitle();
-	const utcDateTime = new Date().toISOString();  
+      const timeStr = new Date().toLocaleTimeString( [], { timeZone: 'America/Chicago', hour12: false, minute: '2-digit', hour: '2-digit' } );  
 
       roam
         .runQuery(
@@ -67,7 +67,7 @@ const main = async ({ token, adminId, roam: { graph, email, password } }) => {
         .then((order) => {
           roam
             .appendBlock(
-              message.text.replace(/\/add /, `${utcDateTime}: `),
+              message.text.replace(/\/add /, `${timeStr}:: `),
               order ?? 0,
               dailyNoteId
             )
@@ -77,21 +77,21 @@ const main = async ({ token, adminId, roam: { graph, email, password } }) => {
               } else {
                 bot.sendMessage(
                   chatId,
-                  `Failed to add message to Roam Daily Notes`
+                  `Failed to add message to Roam Daily Notes, or more likely roam-api didn't return a result.`
                 );
               }
             })
             .catch((err) => {
               bot.sendMessage(
                 chatId,
-                `Failed to add message to Roam Daily Notes.\n${err.toString()}`
+                `Failed to append message to Roam Daily Notes.\n${err.toString()}`
               );
             });
         })
         .catch((err) => {
           bot.sendMessage(
             chatId,
-            `Failed to add message to Roam Daily Notes.\n${err.toString()}`
+            `Failed to add message to Roam Daily Notes: failed to find order?.\n${err.toString()}`
           );
         });
     } else {
