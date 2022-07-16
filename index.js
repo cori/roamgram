@@ -33,12 +33,12 @@ class RoamApi extends RoamResearchPrivateApi {
   }
 }
 
-const main = async ({ token, adminId, roam: { graph, email, password } }) => {
-  if (typeof adminId === "string") adminId = parseInt(adminId);
+const main = async ({ token, adminIdList, roam: { graph, email, password } }) => {
+  if (typeof adminIdList === "string") adminIds = await intList(adminIdList);
 
   const bot = new TelegramBotApi(token, { polling: true });
   const validator = (message) => {
-    if (message.from.id == adminId) return true;
+    if (adminIds.includes(message.from.id)) return true;
     return false;
   };
   const roam = new RoamApi(graph, email, password, {
@@ -110,6 +110,12 @@ const main = async ({ token, adminId, roam: { graph, email, password } }) => {
   });
 };
 
+const intList = (integerString) => {
+  return integerString.split(',').map(el => {
+    return parseInt(el, 10);
+  })
+}
+
 module.exports = main;
 
 require("dotenv").config();
@@ -127,15 +133,15 @@ require("dotenv").config();
       process.exit(1);
     }
 
-    if (key === "TELEGRAM_ADMIN_ID") {
-      if (typeof process.env[key] === "string")
-        process.env[key] = parseInt(process.env[key]);
-    }
+    // if (key === "TELEGRAM_ADMIN_ID") {
+    //   if (typeof process.env[key] === "string")
+    //     process.env[key] = parseInt(process.env[key]);
+    // }
   });
 
   await main({
     token: process.env.TELEGRAM_BOT_TOKEN,
-    adminId: process.env.TELEGRAM_ADMIN_ID,
+    adminIdList: process.env.TELEGRAM_ADMIN_ID,
     roam: {
       graph: process.env.ROAM_GRAPH,
       email: process.env.ROAM_EMAIL,
