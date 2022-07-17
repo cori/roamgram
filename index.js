@@ -3,7 +3,6 @@ const RoamResearchPrivateApi = require("roam-research-private-api");
 
 //  TODO: look for #ij node, if missing create it; aadd these messages therein
 //  TODO: in roam-research-private-api, update daily note things with timezone
-//  TODONE: fix `/add` to something better. maybe just try `&`?
 
 class RoamApi extends RoamResearchPrivateApi {
   async appendBlock(text, order = 0, uid) {
@@ -56,6 +55,7 @@ const main = async ({ token, adminIdList, roam: { graph, email, password } }) =>
   });
 
   bot.onText(/& (.+)/, (message) => {
+    console.log(message);
     const chatId = message.chat.id;
     if (validator(message)) {
       const dailyNoteId = roam.dailyNoteUid();
@@ -81,12 +81,12 @@ const main = async ({ token, adminIdList, roam: { graph, email, password } }) =>
               dailyNoteId
             )
             .then((result) => {
-              if (result) {  //  https://roamresearch.com/#/app/developer-documentation/page/YxUqV1lKF these are always some version of nil
+              if (!result) {  //  https://roamresearch.com/#/app/developer-documentation/page/YxUqV1lKF these are always some version of nil
                 bot.sendMessage(chatId, `Added text to Roam Daily Notes`);
               } else {
                 bot.sendMessage(
                   chatId,
-                  `Failed to add message to Roam Daily Notes, or more likely roam-api didn't return a result.`
+                  `Failed to add message to Roam Daily Notes, or more likely roam-api didn't return a result. %{result}`
                 );
               }
             })
