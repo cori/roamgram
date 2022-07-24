@@ -7,14 +7,14 @@
   "author": "Arnav Gosain <arnav@arnavgosain.com>",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon -w index.js index.js",
-    "install": "bash install-service.sh"
+    "dev": "nodemon",
+    "install-service": "bash install-service.sh"
   },
   "dependencies": {
     "dotenv": "^8.2.0",
     "node-telegram-bot-api": "^0.51.0",
     "pm2": "^4.5.5",
-    "roam-research-private-api": "^0.9.3"
+    "roam-research-private-api": "file:../roam-research-private-api"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"
