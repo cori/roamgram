@@ -54,6 +54,61 @@ const main = async ({ token, adminIdList, roam: { graph, email, password } }) =>
     );
   });
 
+  bot.on('photo', (message) => {
+    console.log(message.photo[0]);
+    const chatId = message.chat.id;
+    if (validator(message)) {
+      const dailyNoteId = roam.dailyNoteUid();
+      const dailyNoteTitle = roam.dailyNoteTitle();
+      const timeStr = new Date().toLocaleTimeString( [], { timeZone: 'America/Chicago', hour12: false, minute: '2-digit', hour: '2-digit' } );
+      roam
+        .runQuery(
+          `[ :find (pull ?e [*]) :where [?e :node/title "${dailyNoteTitle}"]]`
+        )
+        .then((result) => {
+      	  //	find the number of children of the dailyNote and stick this on the end 
+          try {
+            return result[0][0].children.length;
+          } catch {
+            return result[0].length;
+          }
+        })
+        .then((order) => {
+          roam
+            .appendBlock(
+              message.photo[0],
+              order ?? 0,
+              dailyNoteId
+            )
+            .then((result) => {
+              if (!result) {  //  https://roamresearch.com/#/app/developer-documentation/page/YxUqV1lKF these are always some version of nil
+                bot.sendMessage(chatId, `Added text to Roam Daily Notes`);
+              } else {
+                bot.sendMessage(
+                  chatId,
+                  `Failed to add message to Roam Daily Notes? %{result}`
+                );
+              }
+            })
+            .catch((err) => {
+              bot.sendMessage(
+                chatId,
+                `Failed to append message to Roam Daily Notes.\n${err.toString()}`
+              );
+            });
+        })
+        .catch((err) => {
+          bot.sendMessage(
+            chatId,
+            `Failed to add message to Roam Daily Notes: failed to find order?.\n${err.toString()}`
+          );
+        });
+    } else {
+      console.log(message.from.id);
+      bot.sendMessage(chatId, "Invalid user.");
+    }
+  })
+
   bot.onText(/& (.+)/, (message) => {
     console.log(message);
     const chatId = message.chat.id;
@@ -76,7 +131,7 @@ const main = async ({ token, adminIdList, roam: { graph, email, password } }) =>
         .then((order) => {
           roam
             .appendBlock(
-              message.text.replace(/& /, `${timeStr}:: `),
+              message.text.replace(/& /, `${timeStr}:: `).concat(' #', message.from.first_name),
               order ?? 0,
               dailyNoteId
             )
@@ -86,7 +141,7 @@ const main = async ({ token, adminIdList, roam: { graph, email, password } }) =>
               } else {
                 bot.sendMessage(
                   chatId,
-                  `Failed to add message to Roam Daily Notes, or more likely roam-api didn't return a result. %{result}`
+                  `Failed to add message to Roam Daily Notes? %{result}`
                 );
               }
             })
