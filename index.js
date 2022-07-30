@@ -163,6 +163,9 @@ const main = async ({ token, adminIdList, roam: { graph, email, password } }) =>
       bot.sendMessage(chatId, "Invalid user.");
     }
   });
+  bot.on('message', (message) => {
+    console.log(message);
+  });
 };
 
 const intList = (integerString) => {
